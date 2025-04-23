@@ -140,6 +140,8 @@
                 <version>3.1.2</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <!-- ABRE sun.misc para GraalJS en Java17+ -->
+                    <argLine>--add-opens java.base/sun.misc=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
 
@@ -161,6 +163,8 @@
                             <systemPropertyVariables>
                                 <!--suppress UnresolvedMavenProperty -->
                                 <baseUrl>${baseUrl}</baseUrl>
+                                <!-- ABRE sun.misc para GraalJS en Java17+ -->
+                                <argLine>--add-opens java.base/sun.misc=ALL-UNNAMED</argLine>
                             </systemPropertyVariables>
                         </configuration>
                     </execution>
