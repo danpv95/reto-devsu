@@ -1,62 +1,219 @@
 
-# DEVSU Microservicios - Prueba Técnica
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-17-blue.svg" alt="Java 17">
+  <img src="https://img.shields.io/badge/Spring_Boot-3.4.4-green.svg" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Docker–Compose-blue.svg" alt="Docker Compose">
+  <img src="https://img.shields.io/badge/JaCoCo–80%25-green.svg" alt="JaCoCo Coverage">
+</p>
 
-Este proyecto contiene dos microservicios construidos en Spring Boot:
-- **cliente-persona-service**: gestiona clientes.
-- **cuenta-movimiento-service**: gestiona cuentas y movimientos, validando clientes vía REST.
+# 🏦 DEVSU Microservicios Transaccionales – Prueba Técnica
 
-## 🚀 Despliegue Local
+> **“Simulamos un mini-banco: gestión de clientes, cuentas y operaciones financieras, con dos microservicios Spring Boot y una base de datos PostgreSQL en contenedores.”**
 
-### Requisitos
+Este proyecto representa la simulación de una entidad financiera a pequeña escala, estructurada bajo principios de microservicios. Cada servicio cumple un rol crítico en el flujo de datos:
 
-- Java 17
-- Maven 3.8+
-- Docker + Docker Compose
+- `cliente-persona-service`: administra el ciclo de vida del cliente.
+- `cuenta-movimiento-service`: gestiona cuentas, transacciones y validación con clientes mediante REST.
 
-### Docker
+---
 
-```bash
-cd docker-postgres
-docker-compose up -d
+## 🧰 Stack Tecnológico
+
+- **Java 17**: Versión LTS que habilita modernizaciones como `records`, `pattern matching`, y `sealed classes`.
+- **Spring Boot 3.4.4**: Framework que simplifica el desarrollo de servicios REST y configuración empresarial.
+- **PostgreSQL 14+**: Motor de base de datos relacional para entornos QA (dockerizado).
+- **H2 Database**: Base embebida para pruebas en perfil `dev`.
+- **Maven 3.8+**: Sistema de gestión de dependencias y ciclo de vida del proyecto.
+- **Docker + Docker Compose**: Contenedores para base de datos y aislamiento de infraestructura.
+- **Karate**: Framework E2E para pruebas de integración tipo BDD.
+- **JaCoCo**: Medición de cobertura de pruebas.
+
+---
+
+## 📐 Arquitectura & Flujo
+
+```mermaid
+flowchart LR
+  style A fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+  style B fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+  style DB fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px
+
+  subgraph A [Cliente-Persona-Service (8081)]
+    A1[/REST API/] --> A2[(Cliente Entity)]
+  end
+
+  subgraph B [Cuenta-Movimiento-Service (8082)]
+    B1[/REST API/] --> B2[(Cuenta Entity)]
+    B1 --> B3[(Movimiento Entity)]
+    B1 --> B4[Valida Cliente ➡️ A]
+  end
+
+  subgraph DB [PostgreSQL Container]
+    DB[(PostgreSQL:5432 volume: postgres_data)]
+  end
+
+  A --- DB
+  B --- DB
+  B --> A
 ```
 
-La base de datos PostgreSQL quedará disponible en `localhost:5432`.
+---
 
-## 🛠️ Perfiles
+## 📂 Estructura del Proyecto
 
-- `dev`: usa base H2 en memoria.
-- `qa`: se conecta a PostgreSQL dockerizado.
-
-## 🧪 Pruebas
-
-### Unitarias & Integración (MockMvc)
-
-```bash
-./mvnw test
+```
+DEVSU/
+├── docker-devsu/
+│   ├── docker-compose.yml         # PostgreSQL + init.sql + healthcheck
+│   └── init.sql                   # DDL + datos semilla
+│
+├── cliente-persona-service/       # Service A
+│   ├── src/
+│   │   ├── main/java/...          # Controllers, Services, Repos, Entities, DTOs
+│   │   ├── main/resources/
+│   │   │   ├── application-dev.properties   # H2 in-memory (dev)
+│   │   │   ├── application-qa.properties    # PostgreSQL (qa)
+│   │   │   └── application.properties       # common
+│   │   └── test/resources/e2e/
+│   │       ├── health.feature
+│   │       └── karate-config.js
+│   └── pom.xml
+│
+├── cuenta-movimiento-service/     # Service B (estructura similar)
+│
+├── DEVSU.postman_collection.json  # Colección para Postman
+└── README.md
 ```
 
-### Karate (Java)
+---
 
+## 🛠️ Perfiles y Configuración
+
+| Perfil | Base de Datos | Descripción |
+|--------|----------------|-------------|
+| `dev`  | H2 (memoria)   | Ideal para pruebas locales rápidas |
+| `qa`   | PostgreSQL     | Dockerizado, se conecta vía JDBC |
+
+Se selecciona con:  
 ```bash
-./mvnw test -Dtest=karate.KarateTestRunner
+-Dspring.profiles.active=dev
 ```
 
-## 🧪 Postman
+---
 
-Colección disponible en `/postman/DEVSU.postman_collection.json`.
+## 🚀 Despliegue Paso a Paso
 
-## 🔗 Comunicación entre servicios
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/danpv95/reto-devsu.git
+cd reto-devsu
 
-`cuenta-movimiento-service` llama a `cliente-persona-service` vía RestTemplate para validar cliente existente.
+# 2. Levantar infraestructura con Docker Compose
+cd docker-devsu
+docker compose up -d
 
-## 🐳 Puertos
+# 3. Configurar JDK 17 (macOS)
+export JAVA_HOME=$(/usr/libexec/java_home -v17)
 
-| Servicio | Puerto |
-|----------|--------|
-| cliente-persona-service | 8081 |
-| cuenta-movimiento-service | 8082 |
-| PostgreSQL | 5432 |
+# 4. Ejecutar cliente-persona-service (8081)
+cd ../cliente-persona-service
+mvn clean verify -Dspring.profiles.active=qa -DbaseUrl=http://localhost:8081
 
-## 🧾 Generación de datos
+# 5. Ejecutar cuenta-movimiento-service (8082)
+cd ../cuenta-movimiento-service
+mvn clean verify -Dspring.profiles.active=qa -DbaseUrl=http://localhost:8082
+```
 
-Script SQL en `docker-postgres/BaseDatos.sql`.
+---
+
+## 📊 Endpoints REST
+
+### Servicio 1: Clientes (8081)
+
+- `POST /api/clientes` – Crear cliente
+- `GET /api/clientes` – Listar clientes
+- `GET /api/clientes/{id}` – Consultar por ID
+- `PUT /api/clientes/{id}` – Actualizar
+- `DELETE /api/clientes/{id}` – Eliminar
+
+### Servicio 2: Cuentas y Movimientos (8082)
+
+- `POST /api/cuentas` – Crear cuenta
+- `POST /api/movimientos` – Crear movimiento
+- `GET /api/movimientos/cuenta/{id}` – Movimientos por cuenta
+- `GET /api/movimientos/cuenta/{id}/reporte?inicio=...&fin=...` – Reporte financiero
+
+---
+
+## 🧪 Pruebas y Cobertura
+
+### A. Unitarias + MockMvc
+```bash
+mvn test
+```
+
+### B. Health Check con Karate
+```bash
+mvn verify -DbaseUrl=http://localhost:8081
+mvn verify -DbaseUrl=http://localhost:8082
+```
+
+### C. JaCoCo Coverage
+```bash
+mvn verify
+# Ver HTML: target/site/jacoco/index.html
+```
+
+---
+
+## 📦 init.sql
+
+Contiene:
+
+- Creación de tablas: `clientes`, `cuentas`, `movimientos`
+- Datos iniciales para pruebas (semillas)
+
+---
+
+## 🔄 Comunicación Interservicios
+
+`cuenta-movimiento-service` usa `RestTemplate` para validar clientes antes de permitir movimientos o creación de cuentas.
+
+- Retorna `404` si el cliente no existe.
+- Manejo de errores con `IllegalArgumentException`.
+
+---
+
+## 📬 Postman
+
+Importa `DEVSU.postman_collection.json` para probar todos los endpoints:
+
+- CRUD de Clientes
+- Movimientos
+- Reportes
+
+---
+
+## ⚙️ CI/CD (GitHub Actions)
+
+Incluye `.github/workflows/ci.yml` para:
+
+```yaml
+- Ejecutar `mvn verify` en push/pull-request
+- Validar construcción en ambos servicios
+- Generar reporte de cobertura
+```
+
+---
+
+## ✅ Checklist de Entrega
+
+- [x] CRUD de Clientes
+- [x] CRUD de Cuentas
+- [x] Registro de Movimientos con validación
+- [x] Reporte por fechas
+- [x] Docker Compose + PostgreSQL
+- [x] Pruebas unitarias y Karate health
+- [x] Reporte JaCoCo ≥ 80%
+- [x] Documentación técnica completa
+- [x] CI/CD automatizado con GitHub Actions
