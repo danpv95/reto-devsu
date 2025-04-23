@@ -1,0 +1,74 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 6543:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Spin up DB & services
+        working-directory: docker-devsu
+        run: docker-compose up -d
+
+      - name: Wait for cliente-service
+        run: |
+          for i in \$(seq 1 20); do
+            if curl -sf http://localhost:8081/actuator/health | grep -q '"status":"UP"'; then break; fi
+            sleep 3
+          done
+
+      - name: Wait for movimiento-service
+        run: |
+          for i in \$(seq 1 20); do
+            if curl -sf http://localhost:8082/actuator/health | grep -q '"status":"UP"'; then break; fi
+            sleep 3
+          done
+
+      - name: Build & test cliente-persona-service
+        working-directory: cliente-persona-service
+        run: mvn clean verify -DbaseUrl=http://localhost:8081
+
+      - name: Build & test cuenta-movimiento-service
+        working-directory: cuenta-movimiento-service
+        run: mvn clean verify -DbaseUrl=http://localhost:8082
+
+      - name: Tear down Docker
+        if: always()
+        working-directory: docker-devsu
+        run: docker-compose down -v
+
+      - name: Upload JaCoCo reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: cobertura-html
+          path: |
+            cliente-persona-service/target/site/jacoco
+            cuenta-movimiento-service/target/site/jacoco
