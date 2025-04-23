@@ -34,27 +34,23 @@ Este proyecto representa la simulación de una entidad financiera a pequeña esc
 
 ```mermaid
 flowchart LR
-  style A fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
-  style B fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
-  style DB fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px
-
-  subgraph A [Cliente-Persona-Service (8081)]
-    A1[/REST API/] --> A2[(Cliente Entity)]
+  subgraph Cliente-Persona-Service [Cliente-Persona-Service (8081)]
+    A1[REST API] --> A2[Entidad Cliente]
   end
 
-  subgraph B [Cuenta-Movimiento-Service (8082)]
-    B1[/REST API/] --> B2[(Cuenta Entity)]
-    B1 --> B3[(Movimiento Entity)]
-    B1 --> B4[Valida Cliente ➡️ A]
+  subgraph Cuenta-Movimiento-Service [Cuenta-Movimiento-Service (8082)]
+    B1[REST API] --> B2[Entidad Cuenta]
+    B1 --> B3[Entidad Movimiento]
+    B1 --> B4[Valida Cliente vía REST]
   end
 
-  subgraph DB [PostgreSQL Container]
-    DB[(PostgreSQL:5432 volume: postgres_data)]
+  subgraph PostgreSQL [PostgreSQL (5432)]
+    DB[(Base de Datos)]
   end
 
-  A --- DB
-  B --- DB
-  B --> A
+  Cliente-Persona-Service --> DB
+  Cuenta-Movimiento-Service --> DB
+  Cuenta-Movimiento-Service --> Cliente-Persona-Service
 ```
 
 ---
