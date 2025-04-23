@@ -1,35 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ──────────────────────────── -->
+	<!--  Información básica POM      -->
+	<!-- ──────────────────────────── -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.4.4</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
+
 	<groupId>com.devsu</groupId>
 	<artifactId>cuenta-movimiento-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>cuenta-movimiento-service</name>
 	<description>DEVSU: cuenta-movimiento-service</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+
+	<!-- ──────────────────────────── -->
+	<!--  Propiedades globales        -->
+	<!-- ──────────────────────────── -->
 	<properties>
 		<java.version>17</java.version>
+		<karate.version>1.4.1</karate.version>
 	</properties>
+
+	<!-- ──────────────────────────── -->
+	<!--  Dependencias                -->
+	<!-- ──────────────────────────── -->
 	<dependencies>
+		<!-- Spring Boot -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -40,65 +47,71 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- Base de datos -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 
+		<!-- Documentación OpenAPI -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.2.0</version>
 		</dependency>
 
+		<!-- Lombok -->
 		<dependency>
-			<groupId>com.intuit.karate</groupId>
-			<artifactId>karate-junit5</artifactId>
-			<version>1.4.1</version>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.30</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Tests unitarios -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Karate (e2e) -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
+			<groupId>com.intuit.karate</groupId>
+			<artifactId>karate-junit5</artifactId>
+			<version>${karate.version}</version>
+			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 
+	<!-- ──────────────────────────── -->
+	<!--  Plugins de build            -->
+	<!-- ──────────────────────────── -->
 	<build>
 		<plugins>
+
+			<!-- 1. Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.11.0</version>
+
+				<!-- Habilita Lombok + MapStruct -->
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+
+					<useIncrementalCompilation>false</useIncrementalCompilation>
+
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.mapstruct</groupId>
@@ -114,6 +127,7 @@
 				</configuration>
 			</plugin>
 
+			<!-- 2. Spring Boot -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -127,6 +141,7 @@
 				</configuration>
 			</plugin>
 
+			<!-- 3. Surefire (tests unitarios) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -136,27 +151,48 @@
 				</configuration>
 			</plugin>
 
-			<!-- Plugin de cobertura JaCoCo -->
+			<!-- 4. Failsafe (tests e2e Karate) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.1.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>**/*IT.java</include>
+							</includes>
+							<systemPropertyVariables>
+								<!--suppress UnresolvedMavenProperty -->
+								<baseUrl>${baseUrl}</baseUrl>
+							</systemPropertyVariables>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 5. JaCoCo -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
-
 				<executions>
-					<!-- inserta agente -->
+					<!-- Inserta agente -->
 					<execution>
 						<id>prepare-agent</id>
 						<goals><goal>prepare-agent</goal></goals>
 					</execution>
-
-					<!-- genera reporte -->
+					<!-- Genera reporte -->
 					<execution>
 						<id>report</id>
 						<phase>verify</phase>
 						<goals><goal>report</goal></goals>
 					</execution>
-
-					<!-- regla ≥ 80 % -->
+					<!-- Regla 80 % -->
 					<execution>
 						<id>check</id>
 						<phase>verify</phase>
@@ -178,16 +214,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.2</version>
-				<configuration>
-					<useModulePath>false</useModulePath>
-				</configuration>
-			</plugin>
-
 
 		</plugins>
 	</build>

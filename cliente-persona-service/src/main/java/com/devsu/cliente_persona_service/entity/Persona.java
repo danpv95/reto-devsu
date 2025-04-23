@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder                      // ← Builder compatible con herencia
+@SuperBuilder
 public abstract class Persona {
 
     @Id

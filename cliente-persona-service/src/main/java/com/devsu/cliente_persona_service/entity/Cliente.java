@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder                      // hereda el builder de Persona
+@SuperBuilder
 @Table(name = "cliente")
 public class Cliente extends Persona {
 
