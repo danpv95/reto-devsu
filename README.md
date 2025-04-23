@@ -29,28 +29,34 @@ Este proyecto representa la simulación de una entidad financiera a pequeña esc
 - **JaCoCo**: Medición de cobertura de pruebas.
 
 ---
-
 ## 📐 Arquitectura & Flujo
 
 ```mermaid
 flowchart LR
-  subgraph Cliente-Persona-Service [Cliente-Persona-Service (8081)]
-    A1[REST API] --> A2[Entidad Cliente]
+  A1[REST API] --> A2[Entidad Cliente]
+  B1[REST API] --> B2[Entidad Cuenta]
+  B1 --> B3[Entidad Movimiento]
+  B1 --> B4[Valida Cliente vía REST]
+
+  subgraph ServiceA [cliente-persona-service]
+    A1
+    A2
   end
 
-  subgraph Cuenta-Movimiento-Service [Cuenta-Movimiento-Service (8082)]
-    B1[REST API] --> B2[Entidad Cuenta]
-    B1 --> B3[Entidad Movimiento]
-    B1 --> B4[Valida Cliente vía REST]
+  subgraph ServiceB [cuenta-movimiento-service]
+    B1
+    B2
+    B3
+    B4
   end
 
-  subgraph PostgreSQL [PostgreSQL (5432)]
-    DB[(Base de Datos)]
+  subgraph DB [PostgreSQL]
+    D[(Base de Datos)]
   end
 
-  Cliente-Persona-Service --> DB
-  Cuenta-Movimiento-Service --> DB
-  Cuenta-Movimiento-Service --> Cliente-Persona-Service
+  ServiceA --> D
+  ServiceB --> D
+  ServiceB --> ServiceA
 ```
 
 ---
