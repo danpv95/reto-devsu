@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -40,14 +39,14 @@ jobs:
 
       - name: Wait for cliente-service
         run: |
-          for i in \$(seq 1 20); do
+          for i in $(seq 1 20); do
             if curl -sf http://localhost:8081/actuator/health | grep -q '"status":"UP"'; then break; fi
             sleep 3
           done
 
       - name: Wait for movimiento-service
         run: |
-          for i in \$(seq 1 20); do
+          for i in $(seq 1 20); do
             if curl -sf http://localhost:8082/actuator/health | grep -q '"status":"UP"'; then break; fi
             sleep 3
           done
